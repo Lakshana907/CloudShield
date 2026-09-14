@@ -1,20 +1,42 @@
-// Export your models here. Add one export per file
-// export * from "./posts";
-//
-// Each model/table should ideally be split into different files.
-// Each model/table should define a Drizzle table, insert schema, and types:
-//
-//   import { pgTable, text, serial } from "drizzle-orm/pg-core";
-//   import { createInsertSchema } from "drizzle-zod";
-//   import { z } from "zod/v4";
-//
-//   export const postsTable = pgTable("posts", {
-//     id: serial("id").primaryKey(),
-//     title: text("title").notNull(),
-//   });
-//
-//   export const insertPostSchema = createInsertSchema(postsTable).omit({ id: true });
-//   export type InsertPost = z.infer<typeof insertPostSchema>;
-//   export type Post = typeof postsTable.$inferSelect;
+import { integer, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
 
-export {}
+export const projects = pgTable("projects", {
+  id: text("id").primaryKey(),
+  ownerId: text("owner_id").notNull(),
+  companyName: text("company_name").notNull(),
+  title: text("title").notNull(),
+  tlName: text("tl_name").notNull(),
+  referenceKey: text("reference_key").notNull().unique(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const projectMembers = pgTable(
+  "project_members",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id").notNull(),
+    userId: text("user_id").notNull(),
+    displayName: text("display_name").notNull(),
+    role: text("role").notNull(),
+    joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    projectUserUnique: unique("project_members_project_user_unique").on(
+      table.projectId,
+      table.userId,
+    ),
+  }),
+);
+
+export const projectFiles = pgTable("project_files", {
+  id: text("id").primaryKey(),
+  projectId: text("project_id").notNull(),
+  name: text("name").notNull(),
+  size: integer("size").notNull(),
+  contentType: text("content_type").notNull(),
+  objectPath: text("object_path").notNull(),
+  uploadedById: text("uploaded_by_id").notNull(),
+  uploadedByName: text("uploaded_by_name").notNull(),
+  uploadedByRole: text("uploaded_by_role").notNull(),
+  uploadedAt: timestamp("uploaded_at", { withTimezone: true }).defaultNow().notNull(),
+});

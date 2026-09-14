@@ -1,0 +1,1 @@
+- [Generated client typings](typescript-dom-iterable.md) — include DOM iterable typings when generated browser clients use Headers.entries().

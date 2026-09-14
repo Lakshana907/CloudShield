@@ -1,6 +1,6 @@
-# [Project name]
+# CloudSheild
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+CloudSheild gives project teams a private room for TL-issued access keys, shared files, and handoffs.
 
 ## Run & Operate
 
@@ -22,23 +22,37 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/cloudsheild/src/App.tsx` — landing, Clerk auth, dashboard, project room, and upload UI
+- `artifacts/cloudsheild/src/index.css` — CloudSheild theme, Clerk layer, and motion utilities
+- `lib/api-spec/openapi.yaml` — source of truth for dashboard, projects, files, and storage API contracts
+- `artifacts/api-server/src/routes/projects.ts` — authenticated project room and file metadata routes
+- `lib/db/src/schema/index.ts` — project, member, and file metadata tables
+- `artifacts/api-server/src/routes/storage.ts` — protected presigned upload and object serving routes
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Clerk owns account creation, email/password sign-in, and Google sign-in; the browser uses Clerk session cookies.
+- File bytes go directly to App Storage through presigned URLs; PostgreSQL stores only searchable metadata and object paths.
+- Project reference keys use the Block Design Protocol format `BLK-COMPANY-TITLE-RANDOMBLOCK`.
+- Project rooms are shared by authenticated membership records, while TL ownership is derived from the project owner.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Public CloudSheild landing page
+- Branded sign-in and sign-up screens with Google option
+- Authenticated dashboard with project counts, recent activity, and empty/error/loading states
+- Create project rooms with company, title, TL name, and generated reference key
+- Join rooms with company, person, project title, and the TL-issued reference key
+- Shared file uploads for TLs and members, with direct cloud storage and room metadata
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+The app name is spelled “CloudSheild”.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Clerk's Google provider and production credentials are managed by the Auth pane; development uses the Replit-managed Clerk test environment.
+- Production Vite builds need the artifact workflow's `PORT` and `BASE_PATH` values.
 
 ## Pointers
 

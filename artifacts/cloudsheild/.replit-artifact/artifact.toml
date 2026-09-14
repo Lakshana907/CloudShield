@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "CloudSheild"
+description = "A secure cloud project room for teams to create projects, share files, and collaborate using TL-issued reference keys."
+version = "1.0.0"
+id = "artifacts/cloudsheild"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23866
+
+[services.development]
+run = "pnpm --filter @workspace/cloudsheild run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/cloudsheild", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/cloudsheild/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23866"
+BASE_PATH = "/"
