@@ -1,6 +1,6 @@
-# CloudSheild
+# CloudShield
 
-CloudSheild gives project teams a private room for TL-issued access keys, shared files, and handoffs.
+CloudShield gives project teams a private room for TL-issued access keys, shared files, and handoffs.
 
 ## Run & Operate
 
@@ -23,7 +23,7 @@ CloudSheild gives project teams a private room for TL-issued access keys, shared
 ## Where things live
 
 - `artifacts/cloudsheild/src/App.tsx` — landing, Clerk auth, dashboard, project room, and upload UI
-- `artifacts/cloudsheild/src/index.css` — CloudSheild theme, Clerk layer, and motion utilities
+- `artifacts/cloudsheild/src/index.css` — CloudShield theme, Clerk layer, and motion utilities
 - `lib/api-spec/openapi.yaml` — source of truth for dashboard, projects, files, and storage API contracts
 - `artifacts/api-server/src/routes/projects.ts` — authenticated project room and file metadata routes
 - `lib/db/src/schema/index.ts` — project, member, and file metadata tables
@@ -38,7 +38,7 @@ CloudSheild gives project teams a private room for TL-issued access keys, shared
 
 ## Product
 
-- Public CloudSheild landing page
+- Public CloudShield landing page
 - Branded sign-in and sign-up screens with Google option
 - Authenticated dashboard with project counts, recent activity, and empty/error/loading states
 - Create project rooms with company, title, TL name, and generated reference key
@@ -47,7 +47,7 @@ CloudSheild gives project teams a private room for TL-issued access keys, shared
 
 ## User preferences
 
-The app name is spelled “CloudSheild”.
+The app name is spelled “CloudShield”.
 
 ## Gotchas
 

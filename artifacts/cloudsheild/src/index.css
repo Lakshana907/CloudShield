@@ -323,18 +323,18 @@
   }
 }
 
-@keyframes cloudsheild-rise {
+@keyframes cloudshield-rise {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes cloudsheild-pulse {
+@keyframes cloudshield-pulse {
   0%, 100% { opacity: .45; transform: scale(.94); }
   50% { opacity: 1; transform: scale(1); }
 }
 
 @layer utilities {
-  .animate-rise { animation: cloudsheild-rise .55s cubic-bezier(.22, 1, .36, 1) both; }
+  .animate-rise { animation: cloudshield-rise .55s cubic-bezier(.22, 1, .36, 1) both; }
   .animate-rise-delay-1 { animation-delay: 80ms; }
   .animate-rise-delay-2 { animation-delay: 160ms; }
   .animate-rise-delay-3 { animation-delay: 240ms; }

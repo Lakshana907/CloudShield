@@ -184,7 +184,7 @@ function Logo({ dark = false }: { dark?: boolean }) {
         </span>
       </span>
       <span className={`font-bold tracking-[-0.03em] ${dark ? 'text-[#f8f4ec]' : 'text-[#202b3c]'}`} data-testid="text-brand">
-        CloudSheild
+        CloudShield
       </span>
     </Link>
   );
@@ -218,7 +218,7 @@ function LoadingPage({ label = 'Loading your room' }: { label?: string }) {
       <div className="animate-rise flex flex-col items-center gap-5 text-center">
         <div className="relative grid size-16 place-items-center rounded-2xl bg-[#202b3c]">
           <Cloud className="size-7 text-[#f7c948]" strokeWidth={1.5} />
-          <span className="absolute -right-1 -top-1 size-3 animate-[cloudsheild-pulse_1.5s_ease-in-out_infinite] rounded-full bg-[#3d8c7a]" />
+          <span className="absolute -right-1 -top-1 size-3 animate-[cloudshield-pulse_1.5s_ease-in-out_infinite] rounded-full bg-[#3d8c7a]" />
         </div>
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#3d8c7a]" data-testid="status-loading">Secure channel</p>
@@ -274,7 +274,7 @@ function Landing() {
               Handoffs with<br /><span className="text-[#3d8c7a]">a clear signal.</span>
             </h1>
             <p className="mt-8 max-w-xl text-lg leading-8 text-[#64707c]" data-testid="text-landing-intro">
-              CloudSheild gives teams one trusted room for the files, context, and TL-issued keys that keep important work moving.
+              CloudShield gives teams one trusted room for the files, context, and TL-issued keys that keep important work moving.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <Link href="/sign-up" className="inline-flex items-center gap-2 rounded-lg bg-[#202b3c] px-5 py-3.5 text-sm font-bold text-[#fbfaf7] transition-colors hover:bg-[#31445d]" data-testid="link-create-room">
@@ -378,7 +378,7 @@ function Landing() {
           <div className="flex flex-col justify-center">
             <p className="font-mono text-[10px] uppercase tracking-[.22em] text-[#b94d3f]">Built for the in-between</p>
             <h2 className="mt-4 text-4xl font-extrabold leading-tight tracking-[-.05em] text-[#202b3c]" data-testid="heading-principles">The handoff is the product.</h2>
-            <p className="mt-5 text-sm leading-7 text-[#64707c]">CloudSheild is intentionally not another noisy task board. It is a small, dependable room where teams can leave enough context for the next person to do good work.</p>
+            <p className="mt-5 text-sm leading-7 text-[#64707c]">CloudShield is intentionally not another noisy task board. It is a small, dependable room where teams can leave enough context for the next person to do good work.</p>
             <div className="mt-8 space-y-4">
               {[
                 ['One source of truth', 'A project title, TL, members, files, and key stay together.'],
@@ -415,7 +415,7 @@ function AuthPage({ mode }: { mode: 'sign-in' | 'sign-up' }) {
         <div className="absolute -bottom-40 -left-20 size-[28rem] rounded-full border border-[#f7c94822]" />
         <Logo dark />
         <div className="relative max-w-md">
-          <p className="font-mono text-[10px] uppercase tracking-[.22em] text-[#f7c948]" data-testid="text-auth-kicker">CloudSheild / secure channel</p>
+          <p className="font-mono text-[10px] uppercase tracking-[.22em] text-[#f7c948]" data-testid="text-auth-kicker">CloudShield / secure channel</p>
           <h1 className="mt-5 text-5xl font-extrabold leading-[.98] tracking-[-.07em]" data-testid="heading-auth">
             Keep the signal.<br /><span className="text-[#90d5c5]">Lose the scramble.</span>
           </h1>
@@ -764,7 +764,7 @@ function Router() {
 
 function ClerkApp() {
   const [, setLocation] = useLocation();
-  return <ClerkProvider publishableKey={clerkPubKey} proxyUrl={clerkProxyUrl} appearance={appearance} signInUrl={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} localization={{ signIn: { start: { title: 'Welcome back', subtitle: 'Open your project rooms' } }, signUp: { start: { title: 'Create your CloudSheild account', subtitle: 'Keep the signal moving' } } }} routerPush={(to) => setLocation(stripBase(to))} routerReplace={(to) => setLocation(stripBase(to), { replace: true })}><QueryClientProvider client={queryClient}><ClerkQueryClientCacheInvalidator /><Router /></QueryClientProvider></ClerkProvider>;
+  return <ClerkProvider publishableKey={clerkPubKey} proxyUrl={clerkProxyUrl} appearance={appearance} signInUrl={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} localization={{ signIn: { start: { title: 'Welcome back', subtitle: 'Open your project rooms' } }, signUp: { start: { title: 'Create your CloudShield account', subtitle: 'Keep the signal moving' } } }} routerPush={(to) => setLocation(stripBase(to))} routerReplace={(to) => setLocation(stripBase(to), { replace: true })}><QueryClientProvider client={queryClient}><ClerkQueryClientCacheInvalidator /><Router /></QueryClientProvider></ClerkProvider>;
 }
 
 function App() {

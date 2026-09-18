@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "CloudSheild"
+title = "CloudShield"
 description = "A secure cloud project room for teams to create projects, share files, and collaborate using TL-issued reference keys."
 version = "1.0.0"
 id = "artifacts/cloudsheild"
@@ -12,10 +12,10 @@ paths = [ "/" ]
 localPort = 23866
 
 [services.development]
-run = "pnpm --filter @workspace/cloudsheild run dev"
+run = "pnpm --filter @workspace/cloudshield run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/cloudsheild", "run", "build" ]
+build = [ "pnpm", "--filter", "@workspace/cloudshield", "run", "build" ]
 serve = "static"
 publicDir = "artifacts/cloudsheild/dist/public"
 
