@@ -1,1 +1,2 @@
 - [Generated client typings](typescript-dom-iterable.md) — include DOM iterable typings when generated browser clients use Headers.entries().
+- [Protected object previews](protected-object-previews.md) — send Clerk bearer tokens when fetching authenticated App Storage objects in the browser.

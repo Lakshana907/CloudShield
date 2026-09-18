@@ -20,6 +20,7 @@ import {
   Clipboard,
   Cloud,
   Copy,
+  Download,
   File,
   FileArchive,
   FileImage,
@@ -652,6 +653,7 @@ function ProjectRoom() {
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState('');
   const [uploadError, setUploadError] = useState('');
+  const [previewFile, setPreviewFile] = useState<ProjectFile | null>(null);
   const copyKey = async () => {
     if (!project) return;
     await navigator.clipboard?.writeText(project.referenceKey);
@@ -670,18 +672,86 @@ function ProjectRoom() {
         <div className="rounded-2xl bg-[#202b3c] p-6 text-[#f8f4ec]" data-testid="card-reference-key"><div className="flex items-start justify-between"><div><p className="font-mono text-[10px] uppercase tracking-[.2em] text-[#f8f4ec]/50">TL-issued reference key</p><p className="mt-3 max-w-[240px] text-sm leading-6 text-[#f8f4ec]/75">Share this key only with the people who should enter the room.</p></div><KeyRound className="size-5 text-[#f7c948]" /></div><div className="mt-8 flex items-center justify-between gap-3 rounded-xl border border-[#ffffff1a] bg-[#ffffff0a] p-4"><span className="font-mono text-lg font-medium tracking-[.16em] text-[#f7c948]" data-testid="text-reference-key">{project.referenceKey}</span><button onClick={copyKey} className="rounded-lg p-2 text-[#f8f4ec]/60 hover:bg-[#ffffff12] hover:text-[#f8f4ec]" aria-label="Copy reference key" data-testid="button-copy-reference-key">{copied ? <Check className="size-4 text-[#90d5c5]" /> : <Copy className="size-4" />}</button></div><p className="mt-3 font-mono text-[9px] uppercase tracking-[.12em] text-[#f8f4ec]/40" data-testid="text-reference-key-status">{copied ? 'Copied to clipboard' : 'Access is granted by the TL'}</p></div>
         <div className="rounded-2xl border border-[#d8d3c9] bg-[#fbfaf7] p-6" data-testid="card-members"><div className="flex items-center justify-between"><div><p className="font-mono text-[10px] uppercase tracking-[.2em] text-[#64707c]">Room people</p><h2 className="mt-2 text-lg font-extrabold text-[#202b3c]" data-testid="heading-members">{project.memberCount} members</h2></div><Users className="size-5 text-[#3d8c7a]" /></div><div className="mt-6 flex items-center"><div className="flex -space-x-2">{Array.from({ length: Math.min(project.memberCount, 5) }).map((_, index) => <span className={`grid size-9 place-items-center rounded-full border-2 border-[#fbfaf7] text-[10px] font-extrabold ${index === 0 ? 'bg-[#f7c948] text-[#202b3c]' : index % 2 ? 'bg-[#3d8c7a] text-[#f8f4ec]' : 'bg-[#d8d3c9] text-[#202b3c]'}`} key={index} data-testid={`avatar-member-${index}`}>{index === 0 ? initials(project.tlName) : String.fromCharCode(65 + index)}</span>)}</div><span className="ml-3 text-xs text-[#64707c]" data-testid="text-members-summary">TL + collaborators</span></div></div>
       </section>
-      <section className="rounded-2xl border border-[#d8d3c9] bg-[#fbfaf7] p-6" data-testid="section-files"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div><p className="font-mono text-[10px] uppercase tracking-[.2em] text-[#64707c]">Shared files</p><h2 className="mt-2 text-xl font-extrabold tracking-[-.04em] text-[#202b3c]" data-testid="heading-files">{files.length} {files.length === 1 ? 'file' : 'files'} in the room</h2></div><button onClick={() => setShowUpload(true)} className="inline-flex items-center gap-2 self-start rounded-lg border border-[#d8d3c9] px-3 py-2 text-xs font-bold text-[#202b3c] hover:bg-[#f1ede4]" data-testid="button-add-file"><Plus className="size-3.5" /> Add file</button></div>{files.length === 0 ? <div className="mt-7 grid min-h-[225px] place-items-center rounded-xl border border-dashed border-[#c8c2b6] bg-[#f8f5ee] p-7 text-center" data-testid="state-empty-files"><div><div className="mx-auto grid size-11 place-items-center rounded-xl bg-[#f7c948] text-[#202b3c]"><FolderOpen className="size-5" /></div><p className="mt-4 text-sm font-bold text-[#202b3c]" data-testid="text-empty-files">The room is ready for its first file.</p><p className="mt-1 text-xs text-[#64707c]">Share the brief, the source of truth, or the next step.</p><Button className="mt-5" onClick={() => setShowUpload(true)} data-testid="button-empty-upload"><UploadCloud className="size-4" /> Upload a file</Button></div></div> : <div className="mt-7 divide-y divide-[#ece7dd]">{files.map((file) => <FileRow file={file} key={file.id} />)}</div>}</section>
+       <section className="rounded-2xl border border-[#d8d3c9] bg-[#fbfaf7] p-6" data-testid="section-files"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div><p className="font-mono text-[10px] uppercase tracking-[.2em] text-[#64707c]">Shared files</p><h2 className="mt-2 text-xl font-extrabold tracking-[-.04em] text-[#202b3c]" data-testid="heading-files">{files.length} {files.length === 1 ? 'file' : 'files'} in the room</h2></div><button onClick={() => setShowUpload(true)} className="inline-flex items-center gap-2 self-start rounded-lg border border-[#d8d3c9] px-3 py-2 text-xs font-bold text-[#202b3c] hover:bg-[#f1ede4]" data-testid="button-add-file"><Plus className="size-3.5" /> Add file</button></div>{files.length === 0 ? <div className="mt-7 grid min-h-[225px] place-items-center rounded-xl border border-dashed border-[#c8c2b6] bg-[#f8f5ee] p-7 text-center" data-testid="state-empty-files"><div><div className="mx-auto grid size-11 place-items-center rounded-xl bg-[#f7c948] text-[#202b3c]"><FolderOpen className="size-5" /></div><p className="mt-4 text-sm font-bold text-[#202b3c]" data-testid="text-empty-files">The room is ready for its first file.</p><p className="mt-1 text-xs text-[#64707c]">Share the brief, the source of truth, or the next step.</p><Button className="mt-5" onClick={() => setShowUpload(true)} data-testid="button-empty-upload"><UploadCloud className="size-4" /> Upload a file</Button></div></div> : <div className="mt-7 divide-y divide-[#ece7dd]">{files.map((file) => <FileRow file={file} key={file.id} onPreview={() => setPreviewFile(file)} />)}</div>}</section>
     </div>
     {uploadError && <div className="mt-5 rounded-lg border border-[#e7c9c1] bg-[#fff8f6] px-4 py-3 text-sm text-[#8b3f34]" data-testid="text-upload-error">{uploadError}</div>}
     {showUpload && <UploadModal projectId={projectId} onClose={() => setShowUpload(false)} onError={setUploadError} onComplete={() => { setShowUpload(false); setNotice('File shared with the room.'); filesQuery.refetch(); setUploadError(''); }} />}
+     {previewFile && <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />}
   </div>;
 }
 
 function RoomSkeleton() { return <div className="animate-pulse space-y-8" data-testid="state-room-loading"><div className="h-3 w-36 rounded bg-[#ded9ce]" /><div className="h-14 w-80 rounded bg-[#ded9ce]" /><div className="grid gap-5 xl:grid-cols-2"><div className="h-64 rounded-2xl bg-[#ded9ce]" /><div className="h-64 rounded-2xl bg-[#ded9ce]" /></div></div>; }
 
-function FileRow({ file }: { file: ProjectFile }) {
+function FileRow({ file, onPreview }: { file: ProjectFile; onPreview: () => void }) {
   const icon = file.contentType.includes('image') ? <FileImage className="size-5" /> : file.contentType.includes('spreadsheet') || file.contentType.includes('csv') ? <FileSpreadsheet className="size-5" /> : file.contentType.includes('zip') || file.contentType.includes('archive') ? <FileArchive className="size-5" /> : file.contentType.includes('pdf') || file.contentType.includes('text') ? <FileText className="size-5" /> : <File className="size-5" />;
-  return <a href={`/api/storage${file.objectPath}`} target="_blank" rel="noreferrer" className="group flex items-center gap-4 py-4 hover:bg-[#fbfaf7]" data-testid={`link-file-${file.id}`}><span className="grid size-10 shrink-0 place-items-center rounded-lg bg-[#f4f1ea] text-[#3d8c7a]">{icon}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-[#202b3c]" data-testid={`text-file-name-${file.id}`}>{file.name}</p><p className="mt-1 text-xs text-[#64707c]">{formatBytes(file.size)} <span className="mx-1 text-[#c8c2b6]">·</span> {file.uploadedBy} <span className="mx-1 text-[#c8c2b6]">·</span> {formatRelative(file.uploadedAt)}</p></div><span className="hidden rounded-full bg-[#f7efc9] px-2 py-1 font-mono text-[9px] uppercase tracking-[.08em] text-[#987515] sm:inline">{file.uploadedByRole === 'tl' ? 'TL upload' : 'Member upload'}</span><ArrowUpRight className="size-4 text-[#9b9a96] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#3d8c7a]" /></a>;
+  return <button type="button" onClick={onPreview} className="group flex w-full items-center gap-4 py-4 text-left hover:bg-[#fbfaf7]" data-testid={`button-file-${file.id}`} aria-label={`Review ${file.name}`}><span className="grid size-10 shrink-0 place-items-center rounded-lg bg-[#f4f1ea] text-[#3d8c7a]">{icon}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-[#202b3c]" data-testid={`text-file-name-${file.id}`}>{file.name}</p><p className="mt-1 text-xs text-[#64707c]">{formatBytes(file.size)} <span className="mx-1 text-[#c8c2b6]">·</span> {file.uploadedBy} <span className="mx-1 text-[#c8c2b6]">·</span> {formatRelative(file.uploadedAt)}</p></div><span className="hidden rounded-full bg-[#f7efc9] px-2 py-1 font-mono text-[9px] uppercase tracking-[.08em] text-[#987515] sm:inline">{file.uploadedByRole === 'tl' ? 'TL upload' : 'Member upload'}</span><ArrowUpRight className="size-4 text-[#9b9a96] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#3d8c7a]" /></button>;
+}
+
+function FilePreviewModal({ file, onClose }: { file: ProjectFile; onClose: () => void }) {
+  const { getToken } = useAuth();
+  const [state, setState] = useState<{ status: 'loading' | 'ready' | 'error'; url?: string; text?: string; message?: string }>({ status: 'loading' });
+  const fileUrl = `/api/storage${file.objectPath}`;
+  const isText = file.contentType.startsWith('text/') || file.contentType.includes('json') || file.contentType.includes('xml') || file.contentType.includes('csv');
+
+  useEffect(() => {
+    let active = true;
+    let objectUrl: string | undefined;
+    const load = async () => {
+      try {
+        const token = await getToken();
+        const response = await fetch(fileUrl, {
+          credentials: 'include',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        if (!response.ok) throw new Error(`Unable to load file (${response.status}).`);
+        const blob = await response.blob();
+        objectUrl = URL.createObjectURL(blob);
+        if (isText) {
+          const text = await blob.text();
+          if (active) setState({ status: 'ready', url: objectUrl, text });
+        } else if (active) {
+          setState({ status: 'ready', url: objectUrl });
+        }
+      } catch (error) {
+        if (active) setState({ status: 'error', message: error instanceof Error ? error.message : 'Unable to load this file.' });
+      }
+    };
+    void load();
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [fileUrl, getToken, isText]);
+
+  const downloadFile = () => {
+    if (!state.url) return;
+    const link = document.createElement('a');
+    link.href = state.url;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
+  return <div className="fixed inset-0 z-50 grid place-items-center bg-[#202b3c]/55 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" data-testid="dialog-file-preview">
+    <div className="flex max-h-[calc(100dvh-32px)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-[#d8d3c9] bg-[#fbfaf7] shadow-[0_24px_80px_rgba(32,43,60,.28)]">
+      <div className="flex items-center justify-between gap-4 border-b border-[#e6e0d5] px-5 py-4">
+        <div className="min-w-0"><p className="font-mono text-[10px] uppercase tracking-[.2em] text-[#3d8c7a]">File review</p><h2 className="mt-1 truncate text-lg font-extrabold text-[#202b3c]" data-testid="heading-file-preview">{file.name}</h2></div>
+        <div className="flex shrink-0 items-center gap-2">
+          <button type="button" onClick={downloadFile} disabled={!state.url} className="inline-flex items-center gap-2 rounded-lg border border-[#d8d3c9] px-3 py-2 text-xs font-bold text-[#202b3c] hover:bg-[#f1ede4] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-download-file"><Download className="size-3.5" /> Download</button>
+          <button type="button" onClick={onClose} className="rounded-lg p-2 text-[#64707c] hover:bg-[#eee9df] hover:text-[#202b3c]" aria-label="Close file preview" data-testid="button-close-file-preview"><X className="size-4" /></button>
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 overflow-auto bg-[#f4f1ea] p-4 sm:p-6">
+        {state.status === 'loading' && <div className="grid min-h-[360px] place-items-center text-sm text-[#64707c]" data-testid="state-file-preview-loading"><LoaderCircle className="mr-2 inline size-4 animate-spin" /> Loading secure preview…</div>}
+        {state.status === 'error' && <div className="grid min-h-[360px] place-items-center text-center" data-testid="state-file-preview-error"><div><CircleAlert className="mx-auto size-8 text-[#b94d3f]" /><p className="mt-3 font-bold text-[#202b3c]">This file could not be reviewed.</p><p className="mt-2 text-sm text-[#64707c]">{state.message}</p></div></div>}
+        {state.status === 'ready' && file.contentType.startsWith('image/') && state.url && <img src={state.url} alt={file.name} className="mx-auto max-h-[calc(100dvh-190px)] max-w-full rounded-xl object-contain shadow-sm" data-testid="preview-image" />}
+        {state.status === 'ready' && file.contentType === 'application/pdf' && state.url && <iframe src={state.url} title={`Preview of ${file.name}`} className="h-[min(70vh,760px)] w-full rounded-xl border border-[#d8d3c9] bg-white" data-testid="preview-pdf" />}
+        {state.status === 'ready' && isText && <pre className="mx-auto max-w-4xl whitespace-pre-wrap break-words rounded-xl border border-[#d8d3c9] bg-white p-5 font-mono text-xs leading-6 text-[#202b3c]" data-testid="preview-text">{state.text}</pre>}
+        {state.status === 'ready' && !file.contentType.startsWith('image/') && file.contentType !== 'application/pdf' && !isText && <div className="grid min-h-[360px] place-items-center text-center" data-testid="state-file-preview-download-only"><div><File className="mx-auto size-10 text-[#3d8c7a]" /><p className="mt-4 font-bold text-[#202b3c]">Preview is not available for this file type.</p><p className="mt-2 text-sm text-[#64707c]">Download the file to review it in the appropriate application.</p><button type="button" onClick={downloadFile} className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#202b3c] px-4 py-2.5 text-sm font-bold text-[#fbfaf7]" data-testid="button-download-file-only"><Download className="size-4" /> Download the file</button></div></div>}
+      </div>
+    </div>
+  </div>;
 }
 
 function UploadModal({ projectId, onClose, onComplete, onError }: { projectId: string; onClose: () => void; onComplete: () => void; onError: (message: string) => void }) {
