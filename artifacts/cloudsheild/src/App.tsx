@@ -8,7 +8,6 @@ import {
   useClerk,
   useUser,
 } from '@clerk/react';
-import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import {
   ArrowUpRight,
@@ -72,15 +71,8 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 
 const queryClient = new QueryClient();
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
-const clerkPubKey = publishableKeyFromHost(
-  window.location.hostname,
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-);
+const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
-
-if (!clerkPubKey) {
-  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env file');
-}
 
 const appearance = {
   theme: shadcn,
@@ -168,6 +160,9 @@ function initials(name?: string | null) {
 function errorText(error: unknown) {
   if (error && typeof error === 'object' && 'error' in error) {
     return String((error as { error?: string }).error);
+  }
+  if (error instanceof Error && error.message) {
+    return error.message;
   }
   return 'Something went wrong. Please try again.';
 }
@@ -770,7 +765,7 @@ function UploadModal({ projectId, onClose, onComplete, onError }: { projectId: s
       const response = await requestUploadUrl.mutateAsync({ data: { name: selected.name, size: selected.size, contentType } });
       setPhase('uploading');
       const upload = await fetch(response.uploadURL, { method: 'PUT', headers: { 'Content-Type': contentType }, body: selected });
-      if (!upload.ok) throw new Error('The direct upload did not complete.');
+      if (!upload.ok) throw new Error(`File upload failed (HTTP ${upload.status}).`);
       setPhase('recording');
       await createFile.mutateAsync({ projectId, data: { name: selected.name, size: selected.size, contentType, objectPath: response.objectPath } });
       onComplete();
@@ -832,13 +827,29 @@ function Router() {
   </Switch></ErrorBoundary>;
 }
 
-function ClerkApp() {
+function ClerkApp({ publishableKey }: { publishableKey: string }) {
   const [, setLocation] = useLocation();
-  return <ClerkProvider publishableKey={clerkPubKey} proxyUrl={clerkProxyUrl} appearance={appearance} signInUrl={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} localization={{ signIn: { start: { title: 'Welcome back', subtitle: 'Open your project rooms' } }, signUp: { start: { title: 'Create your CloudShield account', subtitle: 'Keep the signal moving' } } }} routerPush={(to) => setLocation(stripBase(to))} routerReplace={(to) => setLocation(stripBase(to), { replace: true })}><QueryClientProvider client={queryClient}><ClerkQueryClientCacheInvalidator /><Router /></QueryClientProvider></ClerkProvider>;
+  return <ClerkProvider publishableKey={publishableKey} proxyUrl={clerkProxyUrl} appearance={appearance} signInUrl={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} localization={{ signIn: { start: { title: 'Welcome back', subtitle: 'Open your project rooms' } }, signUp: { start: { title: 'Create your CloudShield account', subtitle: 'Keep the signal moving' } } }} routerPush={(to) => setLocation(stripBase(to))} routerReplace={(to) => setLocation(stripBase(to), { replace: true })}><QueryClientProvider client={queryClient}><ClerkQueryClientCacheInvalidator /><Router /></QueryClientProvider></ClerkProvider>;
+}
+
+function ClerkConfigurationRequired() {
+  return (
+    <main className="grid min-h-screen place-items-center bg-[#f4f1ea] p-6 text-[#202b3c]">
+      <section className="max-w-lg rounded-2xl border border-[#d8d3c9] bg-[#fbfaf7] p-8 shadow-sm" role="alert">
+        <p className="font-mono text-[10px] uppercase tracking-[.22em] text-[#3d8c7a]">CloudShield / setup required</p>
+        <h1 className="mt-4 text-2xl font-extrabold tracking-[-.04em]">Authentication is not configured</h1>
+        <p className="mt-3 text-sm leading-6 text-[#64707c]">
+          Set <code className="rounded bg-[#f4f1ea] px-1.5 py-1">VITE_CLERK_PUBLISHABLE_KEY</code> to the
+          publishable key from your Clerk development instance, then restart the frontend.
+        </p>
+      </section>
+    </main>
+  );
 }
 
 function App() {
-  return <WouterRouter base={basePath}><ClerkApp /></WouterRouter>;
+  if (!clerkPubKey) return <ClerkConfigurationRequired />;
+  return <WouterRouter base={basePath}><ClerkApp publishableKey={clerkPubKey} /></WouterRouter>;
 }
 
 export default App;

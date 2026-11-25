@@ -6,14 +6,18 @@ import {
 } from '@workspace/api-zod';
 import { Router, type IRouter, type Request, type Response } from 'express';
 
-import { ObjectPermission } from '../lib/objectAcl';
 import {
   ObjectNotFoundError,
   ObjectStorageService,
 } from '../lib/objectStorage';
+import {
+  SupabaseStorageConfigurationError,
+  SupabaseStorageService,
+} from '../lib/supabaseStorage';
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
+const supabaseStorageService = new SupabaseStorageService();
 
 /**
  * POST /storage/uploads/request-url
@@ -41,9 +45,8 @@ router.post(
     try {
       const { name, size, contentType } = parsed.data;
 
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      const objectPath =
-        objectStorageService.normalizeObjectEntityPath(uploadURL);
+      const { uploadURL, objectPath } =
+        await supabaseStorageService.createUploadUrl();
 
       res.json(
         RequestUploadUrlResponse.parse({
@@ -54,7 +57,14 @@ router.post(
       );
     } catch (error) {
       req.log.error({ err: error }, 'Error generating upload URL');
-      res.status(500).json({ error: 'Failed to generate upload URL' });
+      const status =
+        error instanceof SupabaseStorageConfigurationError ? 503 : 502;
+      res.status(status).json({
+        error:
+          error instanceof SupabaseStorageConfigurationError
+            ? error.message
+            : 'Supabase Storage could not prepare the upload. Check the API logs and bucket configuration.',
+      });
     }
   },
 );
@@ -101,9 +111,7 @@ router.get(
 /**
  * GET /storage/objects/*
  *
- * Serve object entities from PRIVATE_OBJECT_DIR.
- * These are served from a separate path from /public-objects and can optionally
- * be protected with authentication or ACL checks based on the use case.
+ * Serve private project files from the configured Supabase Storage bucket.
  */
 router.get('/storage/objects/*path', async (req: Request, res: Response) => {
   try {
@@ -113,46 +121,48 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
     }
     const raw = req.params.path;
     const wildcardPath = Array.isArray(raw) ? raw.join('/') : raw;
-    const objectPath = `/objects/${wildcardPath}`;
-    const objectFile =
-      await objectStorageService.getObjectEntityFile(objectPath);
+    const response = await supabaseStorageService.downloadObject(wildcardPath);
+    if (response.status === 404) {
+      res.status(404).json({ error: 'Object not found' });
+      return;
+    }
+    if (!response.ok) {
+      req.log.error(
+        { status: response.status },
+        'Supabase Storage failed to serve object',
+      );
+      res.status(502).json({ error: 'Failed to retrieve stored file' });
+      return;
+    }
 
-    // --- Protected route example (uncomment when using replit-auth) ---
-    // if (!req.isAuthenticated()) {
-    //   res.status(401).json({ error: "Unauthorized" });
-    //   return;
-    // }
-    // const canAccess = await objectStorageService.canAccessObjectEntity({
-    //   userId: req.user.id,
-    //   objectFile,
-    //   requestedPermission: ObjectPermission.READ,
-    // });
-    // if (!canAccess) {
-    //   res.status(403).json({ error: "Forbidden" });
-    //   return;
-    // }
-
-    const response = await objectStorageService.downloadObject(objectFile);
-
-    res.status(response.status);
-    response.headers.forEach((value, key) => res.setHeader(key, value));
+    res.setHeader(
+      'Content-Type',
+      response.headers.get('content-type') ?? 'application/octet-stream',
+    );
+    const contentLength = response.headers.get('content-length');
+    if (contentLength) res.setHeader('Content-Length', contentLength);
+    res.setHeader('Cache-Control', 'private, no-store');
 
     if (response.body) {
-      const nodeStream = Readable.fromWeb(
+      Readable.fromWeb(
         response.body as ReadableStream<Uint8Array>,
-      );
-      nodeStream.pipe(res);
+      ).pipe(res);
     } else {
       res.end();
     }
   } catch (error) {
+    if (error instanceof SupabaseStorageConfigurationError) {
+      req.log.error({ err: error }, 'Supabase Storage is not configured');
+      res.status(503).json({ error: error.message });
+      return;
+    }
     if (error instanceof ObjectNotFoundError) {
       req.log.warn({ err: error }, 'Object not found');
       res.status(404).json({ error: 'Object not found' });
       return;
     }
-    req.log.error({ err: error }, 'Error serving object');
-    res.status(500).json({ error: 'Failed to serve object' });
+    req.log.error({ err: error }, 'Error serving Supabase object');
+    res.status(502).json({ error: 'Failed to retrieve stored file' });
   }
 });
 
